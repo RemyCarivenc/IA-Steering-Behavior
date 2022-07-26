@@ -10,7 +10,7 @@ namespace ImmersiveFactory.Tools.AI.Entities
         private float speed;
 
         #endregion
-
+        [Header("AutonomousVehicle")]
         /// <summary>
         /// Acceleration rate - it'll be used as a multiplier for the speed
         /// at which the velocity is interpolated when accelerating. A rate

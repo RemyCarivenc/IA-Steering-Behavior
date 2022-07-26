@@ -30,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 8269056629590041180}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -22.9, y: 0.52, z: -22.46}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -57,6 +57,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -107,7 +108,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7f9750734036ed4ba9c3b8d4d226b2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: {x: 20, y: 20, z: 20}
+  radius: {x: 10, y: 10, z: 10}
   allowedAxes: {x: 1, y: 1, z: 1}
 --- !u!114 &2895649449250115444
 MonoBehaviour:
@@ -121,5 +122,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2782a4450f1d1949b63f4c5bde7d3a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  drawGizmos: 0
   center: {x: 0, y: 0, z: 0}
-  radius: 0.75
+  radius: 1

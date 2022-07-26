@@ -6,6 +6,7 @@ namespace ImmersiveFactory.Tools.AI.Entities
 {
     public class Entity : MonoBehaviour
     {
+        [Header("Entity")]
         [SerializeField]
         protected bool drawGizmos;
         [SerializeField] 

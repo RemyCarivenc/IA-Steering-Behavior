@@ -43,8 +43,7 @@ namespace ImmersiveFactory.Tools.AI.Steer
             if(Vehicle.Radar.Obstacles == null || !Vehicle.Radar.Obstacles.Any())
                 return avoidance;
 
-            Vector3 futurePosition = Vehicle.PredictFutureDesiredPosition(estimationTime);
-            
+            Vector3 futurePosition = Vehicle.PredictFutureDesiredPosition(estimationTime);            
             
             for(var i = 0; i < Vehicle.Radar.Obstacles.Count ; i++)
             {
@@ -65,8 +64,6 @@ namespace ImmersiveFactory.Tools.AI.Steer
 
             avoidance /= Vehicle.Radar.Obstacles.Count;
 
-            Debug.DrawLine(Vehicle.Position, Vehicle.Position + avoidance, Color.green);
-
             Vector3 desiredVelocity = Vector3.Reflect(Vehicle.DesiredVelocity, avoidance);
             
             return desiredVelocity;
@@ -82,8 +79,6 @@ namespace ImmersiveFactory.Tools.AI.Steer
             float combinedRadius = _vehicle.Radius + _obstacle.Radius;
             
             Vector3 movement = _futureVehiclePosition - _vehicle.Position;
-            //Debug.DrawLine(_vehicle.Position, _futureVehiclePosition, Color.cyan);
-            //Debug.DrawLine(_vehicle.Position,movement, Color.red);
             Vector3 direction = movement.normalized;
 
             Vector3 vehicleToObstacle = _obstacle.Position - _vehicle.Position;
@@ -97,7 +92,7 @@ namespace ImmersiveFactory.Tools.AI.Steer
                 return intersection;
             }
 
-            var projectedObstacleCenter = _vehicle.Position + projectionLength * direction;
+            Vector3 projectedObstacleCenter = _vehicle.Position + projectionLength * direction;
 
             // distance of the obstacle to the pathe the vehicle is going to take
             float obstacleDistanceToPath = (_obstacle.Position - projectedObstacleCenter).magnitude;
@@ -146,9 +141,9 @@ namespace ImmersiveFactory.Tools.AI.Steer
                 Gizmos.color = Color.red;
                 Gizmos.DrawWireSphere(o.Position, o.Radius);
             }
-            
-            //Predict Futur Position
-            Debug.DrawLine(Vehicle.Position, Vehicle.PredictFutureDesiredPosition(estimationTime), Color.yellow);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(transform.position, Vehicle.PredictFutureDesiredPosition(estimationTime));
         }
     }
 }

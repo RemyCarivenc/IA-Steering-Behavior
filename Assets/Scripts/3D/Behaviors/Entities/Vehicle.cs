@@ -13,10 +13,11 @@ namespace ImmersiveFactory.Tools.AI.Entities
     {
         #region Private fields
 
+        [Header("Vehicle")]
         [SerializeField]
         private float minSpeedForTurning = 0.1f;
 
-        /// <summary>
+        /*/// <summary>
         /// The vehicle movement priority
         /// </summary>
         /// <remarks>
@@ -25,7 +26,7 @@ namespace ImmersiveFactory.Tools.AI.Entities
         /// using any behavior like that.
         /// </remarks>
         [SerializeField]
-        private int movementPriority;
+        private int movementPriority;*/
 
         /// <summary>
         /// Across how many seconds is the vehicle's forward orientation smoothed
@@ -122,10 +123,10 @@ namespace ImmersiveFactory.Tools.AI.Entities
             get { return minSpeedForTurning; }
         }
 
-        public int MovementPriority
+       /* public int MovementPriority
         {
             get { return movementPriority; }
-        }
+        }*/
         
          public Radar Radar { get; private set; }
 
@@ -205,8 +206,8 @@ namespace ImmersiveFactory.Tools.AI.Entities
             Steerings = allSteering.Where(x => !x.IsPostProcess).ToArray();
             SteeringPostprocessors = allSteering.Where(x => x.IsPostProcess).ToArray();
 
-            if(movementPriority == 0)
-                movementPriority = gameObject.GetInstanceID();
+           /* if(movementPriority == 0)
+                movementPriority = gameObject.GetInstanceID();*/
             
             Radar = GetComponent<Radar>();
             // Speedometer = GetComponent<Speedometer>();

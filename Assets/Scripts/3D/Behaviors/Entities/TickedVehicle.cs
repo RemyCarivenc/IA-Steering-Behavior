@@ -22,6 +22,7 @@ namespace ImmersiveFactory.Tools.AI.Entities
         /// </summary>
         private string queueName = "Steering";
 
+        [Header("TickedVehicle")]
         /// <summary>
         /// How often will this Vehicle's steering calculations be ticked
         /// </summary>

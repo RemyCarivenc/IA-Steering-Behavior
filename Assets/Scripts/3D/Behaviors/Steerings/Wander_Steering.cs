@@ -17,6 +17,8 @@ namespace ImmersiveFactory.Tools.AI.Steer
         [SerializeField]
         private float randomPointFrequency = 1;
         [SerializeField]
+        private float distanceMinArrival = 1;
+        [SerializeField]
         private Vector3 areaWander;
         
         private Vector3 wanderCirclePosition = Vector3.zero;
@@ -77,7 +79,7 @@ namespace ImmersiveFactory.Tools.AI.Steer
             timer += Time.deltaTime;
             float distance = Vector3.Distance(Vehicle.Position, randomPoint);
             
-            if(distance < 0.5f || timer > randomPointFrequency)
+            if(distance < distanceMinArrival || timer > randomPointFrequency)
             {
                 randomPoint = Random.insideUnitSphere * wanderRadius;
                 randomPoint += wanderCirclePosition;
