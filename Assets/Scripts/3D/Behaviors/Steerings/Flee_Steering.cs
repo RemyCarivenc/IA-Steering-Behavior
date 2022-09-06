@@ -1,31 +1,27 @@
 ﻿using UnityEngine;
 
-namespace ImmersiveFactory.Tools.AI.Steer
+public class Flee_Steering : Steering
 {
-    public class Flee_Steering : Steering
+    [SerializeField]
+    private Transform targetPoint = null;
+
+    public Transform TargetPoint
     {
-        [SerializeField]
-        private Transform targetPoint = null;
-        private Vector3 desiredVelocity;
+        get { return targetPoint; }
+        set { targetPoint = value; }
+    }
 
-        public Transform TargetPoint
+    protected override Vector3 CalculateForce()
+    {
+        if (targetPoint != null)
         {
-            get { return targetPoint;}
-            set { targetPoint = value;}
+            Vector3 desiredVelocity = ObjectAI.Position - targetPoint.position;
+
+            return desiredVelocity - ObjectAI.Velocity;
         }
-        
-        protected override Vector3 CalculateForce()
+        else
         {
-            if(targetPoint != null)
-            {
-                desiredVelocity = (Vehicle.Position - targetPoint.position).normalized * Vehicle.MaxSpeed;
-
-                return desiredVelocity - Vehicle.Velocity;
-            }
-            else
-            {
-                return Vector3.zero;
-            }
+            return Vector3.zero;
         }
     }
 }
