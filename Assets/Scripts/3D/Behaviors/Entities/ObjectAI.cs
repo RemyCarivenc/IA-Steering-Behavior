@@ -241,50 +241,73 @@ public abstract class ObjectAI : Entity
         return Position + (DesiredVelocity * _predictionTime);
     }
 
-    /// <summary>
-    /// Calculates if a objectAI is in the neighborhood of another
-    /// </summary>
-    /// <param name="_other">
-    /// Another objectAI to check against
-    /// </param>
-    /// <param name="_minDistance">
-    /// Minimum distance
-    /// </param>
-    /// <param name="_maxDistance">
-    /// Maximun distance
-    /// </param>
-    /// <param name="_cosMaxAngle">
-    /// Cosine of the maximun angle between objectAI (for performance)
-    /// </param>
-    /// <returns>
-    /// True if the other objectAI can be considered to our neighbor, or false if otherwise
-    /// </returns>
+    public Vector3 SteerToAvoidCloseNeighbors(float _mindSeparationDistance, ObjectAI _object)
+    {
+        foreach (var other in _object.Radar.Obstacles)
+        {
+            float sumOfRadius = _object.Radius + other.Radius;
+            float minCenterToCenter = _mindSeparationDistance + sumOfRadius;
+            Vector3 offset = other.Position - _object.Position;
+            float currenDistance = offset.magnitude;
+            if (currenDistance < minCenterToCenter)
+            {
+                float projection = Vector3.Dot(offset, _object.transform.forward);
+                Vector3 perpendicular = _object.transform.forward * projection;
+                perpendicular = -offset - perpendicular;
+
+                return perpendicular;
+            }
+        }
+
+        return Vector3.zero;
+    }
+
+    public float PredictNearestApproachTime(ObjectAI _other)
+    {
+        Vector3 tempVelocity = _other.Velocity - Velocity;
+        float tempSpeed = tempVelocity.magnitude;
+
+        if (Mathf.Approximately(tempSpeed, 0))
+        {
+            return 0;
+        }
+
+        Vector3 tempTangent = tempVelocity / tempSpeed;
+
+        Vector3 tempPosition = Position - _other.Position;
+        float projection = Vector3.Dot(tempTangent, tempPosition);
+
+        return projection / tempSpeed;
+    }
+
     public bool IsInNeighborhood(ObjectAI _other, float _minDistance, float _maxDistance, float _cosMaxAngle)
     {
-        bool result = false;
-        if (_other != this)
-        {
-            Vector3 offset = _other.Position - Position;
-            float distanceSquared = offset.sqrMagnitude;
+        Vector3 offset = _other.Position - Position;
+        float distanceSquared = offset.sqrMagnitude;
 
-            // definitely in neighborhood if inside minDistance sphere
-            if (distanceSquared < (_minDistance * _minDistance))
+        // definitely in neighborhood if inside minDistance sphere
+        if (distanceSquared < (_minDistance * _minDistance))
+        {
+            return true;
+        }
+        else
+        {
+            // definitely not in neighborhood if outside maxDistance sphere
+            if (distanceSquared > (_maxDistance * _maxDistance))
             {
-                result = true;
+                return false;
             }
             else
             {
-                // definitely not in neighborhood if outside maxDistance sphere
-                if (distanceSquared <= (_maxDistance * _maxDistance))
-                {
-                    // otherwise, test angular offset from forward axis
-                    Vector3 unitOffset = offset / Mathf.Sqrt(distanceSquared);
-                    float forwardness = Vector3.Dot(transform.forward, unitOffset);
-                    result = forwardness > _cosMaxAngle;
-                }
+                // otherwise, test angular offset from forward axis
+                Vector3 unitOffset = offset / Mathf.Sqrt(distanceSquared);
+                float forwardness = Vector3.Dot(transform.forward, unitOffset);
+                if(forwardness > _cosMaxAngle)
+                    return true;
+                else
+                    return false;
             }
         }
-        return result;
     }
 
     /// <summary>

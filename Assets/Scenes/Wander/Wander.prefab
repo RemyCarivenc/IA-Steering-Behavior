@@ -161,7 +161,7 @@ MonoBehaviour:
   drawGizmos: 0
   wanderRadius: 30
   wanderDistance: 8
-  randomPointFrequency: 0.1
+  randomPointFrequency: 1
   distanceMinArrival: 1
   areaWander: {x: 50, y: 50, z: 50}
 --- !u!1 &7019398673731940912

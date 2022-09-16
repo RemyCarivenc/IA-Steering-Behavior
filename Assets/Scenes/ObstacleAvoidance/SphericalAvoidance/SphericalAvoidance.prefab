@@ -304,11 +304,11 @@ MonoBehaviour:
   center: {x: 0, y: 0, z: 0}
   radius: 1
   minSpeedForTurning: 0.1
-  turnTime: 0.5
+  turnTime: 0.75
   mass: 1
   allowedMovementAxes: {x: 1, y: 1, z: 1}
   arrivalRadius: 1
-  maxSpeed: 2
+  maxSpeed: 3
   maxForce: 20
   canMove: 1
   tickLength: 0.01
@@ -350,8 +350,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weight: 10
   drawGizmos: 1
-  estimationTime: 1
-  maxSeeAhead: 1
+  estimationTime: 0.4
 --- !u!114 &8270958585037292763
 MonoBehaviour:
   m_ObjectHideFlags: 0

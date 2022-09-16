@@ -7,6 +7,8 @@ public class ObstacleSpherical_Steering : Steering
 {
     public bool drawGizmos = false;
 
+    Vector3 avoidance;
+
     public struct PathIntersection
     {
         public bool Intersect;
@@ -28,48 +30,128 @@ public class ObstacleSpherical_Steering : Steering
     {
         get { return true; }
     }
-
-    [SerializeField]
-    private float maxSeeAhead = 1;
-
     protected override Vector3 CalculateForce()
     {
-        /*Vector3 ahead = Vehicle.Position + Vehicle.Velocity.normalized * maxSeeAhead;*/
-        Vector3 avoidance = Vector3.zero;
+        avoidance = Vector3.zero;
 
         if (ObjectAI.Radar.Obstacles == null || !ObjectAI.Radar.Obstacles.Any())
             return avoidance;
 
-        Vector3 futurePosition = ObjectAI.PredictFutureDesiredPosition(estimationTime);
+        // first priority is to prevent immediate interpenetration
+        Vector3 separation = ObjectAI.SteerToAvoidCloseNeighbors(0, ObjectAI);
+        if (separation != Vector3.zero)
+            return separation;
 
-        foreach (var sphere in ObjectAI.Radar.Obstacles)
+        PathIntersection next = new PathIntersection(null);
+        PathIntersection nearest = new PathIntersection(null);
+
+        foreach (var obstacle in ObjectAI.Radar.Obstacles)
         {
-            if (sphere == null || sphere.Equals(null))
+            if (obstacle == null || obstacle.Equals(null))
                 continue; // In case the object was destroyed since we cached it
-            PathIntersection next = FindNextIntersectionWithSphere(ObjectAI, futurePosition, sphere);
-            float avoidanceMultiplier = 0f;
-            if (next.Intersect)
-            {
-                float timeToObstacle = next.Distance / ObjectAI.Speed;
-                avoidanceMultiplier = 2 * (estimationTime / timeToObstacle);
+            next = FindNextIntersectionWithSphere(obstacle);
 
-            }
-            Vector3 oppositeDirection = ObjectAI.Position - sphere.Position;
-            avoidance += avoidanceMultiplier * oppositeDirection;
+            if (!nearest.Intersect || (next.Intersect && next.Distance < nearest.Distance))
+                nearest = next;
         }
 
-        avoidance /= ObjectAI.Radar.Obstacles.Count;
+        if (nearest.Intersect)
+        {
+            Vector3 offset = nearest.Obstacle.Position - ObjectAI.Position;
+            float projection = Vector3.Dot(offset, ObjectAI.transform.forward);
+            Vector3 perpendicular = ObjectAI.transform.forward * projection;
+            avoidance = -offset - perpendicular;
+            avoidance = avoidance.normalized;
+            avoidance *= ObjectAI.MaxForce;
+            avoidance += ObjectAI.transform.forward * 0.75f;
+        }
 
-        Vector3 desiredVelocity = Vector3.Reflect(ObjectAI.DesiredVelocity, avoidance);
+        return avoidance;
+        /* Vector3 avoidance = Vector3.zero;
 
-        return desiredVelocity;
-        //return Vector3.zero;
+         if (ObjectAI.Radar.Obstacles == null || !ObjectAI.Radar.Obstacles.Any())
+             return avoidance;
+
+         Vector3 futurePosition = ObjectAI.PredictFutureDesiredPosition(estimationTime);
+
+         foreach (var sphere in ObjectAI.Radar.Obstacles)
+         {
+             if (sphere == null || sphere.Equals(null))
+                 continue; // In case the object was destroyed since we cached it
+             PathIntersection next = FindNextIntersectionWithSphere(sphere);
+             float avoidanceMultiplier = 0f;
+             if (next.Intersect)
+             {
+                float timeToObstacle = next.Distance / ObjectAI.Speed;
+                avoidanceMultiplier = 2 * (estimationTime / timeToObstacle);
+             }
+             Vector3 oppositeDirection = ObjectAI.Position - sphere.Position;
+             avoidance += avoidanceMultiplier * oppositeDirection;
+         }
+
+         avoidance /= ObjectAI.Radar.Obstacles.Count;
+
+         Vector3 desiredVelocity = Vector3.Reflect(ObjectAI.DesiredVelocity, avoidance);
+
+         return desiredVelocity;*/
     }
 
-    public static PathIntersection FindNextIntersectionWithSphere(ObjectAI _objectAI, Vector3 _futureObjectAIPosition, Entity _obstacle)
+    private float Square(float _f)
+    {
+        return (_f * _f);
+    }
+
+    private PathIntersection FindNextIntersectionWithSphere(Entity _obstacle)
+    {
+        PathIntersection intersection = new PathIntersection(_obstacle);
+
+        Vector3 futurePosition = ObjectAI.PredictFutureDesiredPosition(estimationTime);
+        float combinedRadius = ObjectAI.Radius + _obstacle.Radius;
+
+        Vector3 movement = futurePosition - ObjectAI.Position;
+        Vector3 direction = movement.normalized;
+
+        Vector3 objectAIToObstacle = _obstacle.Position - ObjectAI.Position;
+
+        float projectionLength = Vector3.Dot(direction, objectAIToObstacle);
+
+        if (projectionLength > (movement.magnitude + combinedRadius) || projectionLength < 0)
+            return intersection;
+
+        Vector3 obstacleToObjectAI = ObjectAI.Position - _obstacle.Position;
+
+        float a = Square(movement.x) + Square(movement.y) + Square(movement.z);
+        float b = 2.0f * (movement.x * obstacleToObjectAI.x + movement.y * obstacleToObjectAI.y + movement.z * obstacleToObjectAI.z);
+        float c = Square(_obstacle.Position.x) + Square(_obstacle.Position.y) + Square(_obstacle.Position.z)
+                + Square(ObjectAI.Position.x) + Square(ObjectAI.Position.y) + Square(ObjectAI.Position.z)
+                - 2 * (_obstacle.Position.x * ObjectAI.Position.x + _obstacle.Position.y * ObjectAI.Position.y + _obstacle.Position.z * ObjectAI.Position.z)
+                - Square(_obstacle.Radius + ObjectAI.Radius);
+        float d = Square(b) - 4 * a * c;
+
+        if (d < 0)
+            return intersection;
+
+        float t1 = (-b - Mathf.Sqrt(d)) / (2.0f * a);
+        float t2 = (-b + Mathf.Sqrt(d)) / (2.0f * a);
+
+        Vector3 point1 = new Vector3(ObjectAI.Position.x * (1 - t1) + t1 * futurePosition.x,
+                                     ObjectAI.Position.y * (1 - t1) + t1 * futurePosition.y,
+                                     ObjectAI.Position.z * (1 - t1) + t1 * futurePosition.z);
+
+
+        Vector3 point2 = new Vector3(ObjectAI.Position.x * (1 - t2) + t2 * futurePosition.x,
+                                     ObjectAI.Position.y * (1 - t2) + t2 * futurePosition.y,
+                                     ObjectAI.Position.z * (1 - t2) + t2 * futurePosition.z);
+
+        intersection.Intersect = true;
+        intersection.Distance = (t1 <= t2) ? t1 : t2;
+
+        return intersection;
+    }
+
+    /*public PathIntersection FindNextIntersectionWithSphere(ObjectAI _objectAI, Vector3 _futureObjectAIPosition, Entity _obstacle)
     {
         // this mainly follows http://www.lighthouse3d.com/tutorials/maths/ray-sphere-intersection/
-
         PathIntersection intersection = new PathIntersection(_obstacle);
 
         float combinedRadius = _objectAI.Radius + _obstacle.Radius;
@@ -127,7 +209,7 @@ public class ObstacleSpherical_Steering : Steering
         intersection.Distance = Mathf.Min(intersectionPoint1Distance, intersectionPoint2Distance);
 
         return intersection;
-    }
+    }*/
 
     private void OnDrawGizmos()
     {
@@ -139,7 +221,9 @@ public class ObstacleSpherical_Steering : Steering
         }
 
         Gizmos.color = Color.blue;
-        Gizmos.DrawLine(transform.position, ObjectAI.PredictFutureDesiredPosition(estimationTime));
+        Gizmos.DrawLine(ObjectAI.Position, ObjectAI.PredictFutureDesiredPosition(estimationTime));
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(ObjectAI.Position, ObjectAI.Position + avoidance);
     }
 }
 
