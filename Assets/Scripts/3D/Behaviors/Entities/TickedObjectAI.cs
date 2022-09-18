@@ -150,7 +150,7 @@ public abstract class TickedObjectAI : ObjectAI
             DeQueue();
         }
     }
-
+    Vector3 force;
     protected void CalculateForces()
     {
         PreviousTickTime = CurrentTickTime;
@@ -161,7 +161,7 @@ public abstract class TickedObjectAI : ObjectAI
             return;
         }
 
-        var force = Vector3.zero;
+        force = Vector3.zero;
 
         for (var i = 0; i < Steerings.Length; i++)
         {
@@ -171,7 +171,7 @@ public abstract class TickedObjectAI : ObjectAI
                 force += s.WeighedForce;
             }
         }
-        LastRawForce = force;
+        //LastRawForce = force;
 
         // Enforce speed limit. Steering behaviors are expected to return a
         // final desired velocity, not a acceleration, so we apply them directly.
@@ -304,4 +304,9 @@ public abstract class TickedObjectAI : ObjectAI
         CanMove = false;
         ZeroVelocity();
     }
+
+   /* private void OnDrawGizmos() {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(transform.position,transform.position + force);
+    }*/
 }

@@ -149,7 +149,7 @@ public abstract class ObjectAI : Entity
     /// Last raw force applied to the objectAI. It is expected to be set 
     /// by the subclases.
     /// </summary>
-    public Vector3 LastRawForce { get; protected set; }
+    //public Vector3 LastRawForce { get; protected set; }
 
     public abstract float Speed { get; }
 

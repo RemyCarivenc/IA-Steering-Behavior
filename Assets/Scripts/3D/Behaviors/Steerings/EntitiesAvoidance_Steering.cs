@@ -13,10 +13,11 @@ public class EntitiesAvoidance_Steering : Steering
     private Vector3 ourPositionAtNearestApproach;
     private Vector3 threatPositionAtNearestApproach;
 
+    Vector3 avoidance;
 
     protected override Vector3 CalculateForce()
     {
-        Vector3 avoidance = Vector3.zero;
+        avoidance = Vector3.zero;
         if (ObjectAI.Radar.ObjectAIs == null || !ObjectAI.Radar.ObjectAIs.Any())
             return avoidance;
 
@@ -100,7 +101,7 @@ public class EntitiesAvoidance_Steering : Steering
         if (ObjectAI == null || !drawGizmos) return;
 
         Gizmos.color = Color.blue;
-        Gizmos.DrawLine(ObjectAI.Position, ObjectAI.Position + ObjectAI.Velocity * minTimeToCollision);
+        Gizmos.DrawLine(ObjectAI.Position, ObjectAI.Position + avoidance);
     }
 }
 
