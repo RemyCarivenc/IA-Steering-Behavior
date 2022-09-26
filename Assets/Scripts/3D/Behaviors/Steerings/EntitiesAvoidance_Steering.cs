@@ -8,7 +8,7 @@ public class EntitiesAvoidance_Steering : Steering
     public bool drawGizmos = false;
 
     [SerializeField]
-    private float minTimeToCollision = 1;
+    private float predictionTime = 1;
 
     private Vector3 ourPositionAtNearestApproach;
     private Vector3 threatPositionAtNearestApproach;
@@ -29,7 +29,7 @@ public class EntitiesAvoidance_Steering : Steering
         // otherwise, go on to consider potential future collisions
         float steer = 0;
         ObjectAI threat = null;
-        float minTime = minTimeToCollision;
+        float minTime = predictionTime;
 
         foreach (var other in ObjectAI.Radar.ObjectAIs)
         {

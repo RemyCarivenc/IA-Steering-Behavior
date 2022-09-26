@@ -24,7 +24,7 @@ public class ObstacleSpherical_Steering : Steering
     }
 
     [SerializeField]
-    private float estimationTime = 2;
+    private float predictionTime = 1;
 
     public override bool IsPostProcess
     {
@@ -105,7 +105,7 @@ public class ObstacleSpherical_Steering : Steering
     {
         PathIntersection intersection = new PathIntersection(_obstacle);
 
-        Vector3 futurePosition = ObjectAI.PredictFutureDesiredPosition(estimationTime);
+        Vector3 futurePosition = ObjectAI.PredictFutureDesiredPosition(predictionTime);
         float combinedRadius = ObjectAI.Radius + _obstacle.Radius;
 
         Vector3 movement = futurePosition - ObjectAI.Position;
@@ -221,7 +221,7 @@ public class ObstacleSpherical_Steering : Steering
         }
 
         Gizmos.color = Color.blue;
-        Gizmos.DrawLine(ObjectAI.Position, ObjectAI.PredictFutureDesiredPosition(estimationTime));
+        Gizmos.DrawLine(ObjectAI.Position, ObjectAI.PredictFutureDesiredPosition(predictionTime));
         Gizmos.color = Color.red;
         Gizmos.DrawLine(ObjectAI.Position, ObjectAI.Position + avoidance);
     }

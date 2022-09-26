@@ -6,7 +6,7 @@ public class Pursuit_Steering : Steering
     private float acceptableDistance = .0f;
 
     [SerializeField]
-    private float maxPredictionTime = 2f;
+    private float predictionTime = 2f;
 
     [SerializeField]
     private ObjectAI target;
@@ -108,7 +108,7 @@ public class Pursuit_Steering : Steering
 
             // estimated time until intercept of target
             var et = directTravelTime * timeFactor;
-            var etl = (et > maxPredictionTime) ? maxPredictionTime : et;
+            var etl = (et > predictionTime) ? predictionTime : et;
 
 
             Vector3 futurePosition = target.PredictFuturePosition(etl);

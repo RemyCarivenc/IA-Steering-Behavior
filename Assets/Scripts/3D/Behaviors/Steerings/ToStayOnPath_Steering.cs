@@ -2,17 +2,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(PathFollowingController))]
 public class ToStayOnPath_Steering : Steering
 {
     [SerializeField]
-    private float estimationTime = 2;
+    private bool drawGizmos = false;
+    [SerializeField]
+    private float predictionTime = 2;
+    [SerializeField]
+    private Transform pathRoot;
+
+    private Vector3 onPath = Vector3.zero;
 
     private PathWay pathWay;
 
-    public PathWay PathWay
+    private void OnEnable()
     {
-        set {pathWay = value;}
+        if (pathRoot != null)
+        {
+            List<Vector3> pathPoints = new List<Vector3>();
+
+            for (int i = 0; i < pathRoot.childCount; i++)
+                pathPoints.Add(pathRoot.GetChild(i).position);
+
+            pathWay = new PathWay(pathPoints.ToArray(), 1, false);
+        }
     }
 
     protected override Vector3 CalculateForce()
@@ -21,10 +34,10 @@ public class ToStayOnPath_Steering : Steering
         {
             return Vector3.zero;
         }
-   
-        Vector3 futurePosition = ObjectAI.PredictFuturePosition(estimationTime);
 
-        Vector3 onPath = pathWay.MapPointToPath(futurePosition);
+        Vector3 futurePosition = ObjectAI.PredictFuturePosition(predictionTime);
+
+        onPath = pathWay.MapPointToPath(futurePosition);
 
         if (pathWay.Outside < 0)
         {
@@ -34,6 +47,20 @@ public class ToStayOnPath_Steering : Steering
         {
             Vector3 desiredVelocity = onPath - ObjectAI.Position;
             return desiredVelocity - ObjectAI.Velocity;
+        }
+    }
+
+    void OnDrawGizmos()
+    {
+        if (drawGizmos && Application.isPlaying)
+        {
+            // draw line from our position to our predicted future position
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(ObjectAI.Position, ObjectAI.PredictFuturePosition(predictionTime));
+
+            // draw line from our position to our steering target on the path
+            Gizmos.color = new Color(1, 0.75f, 0);
+            Gizmos.DrawLine(ObjectAI.Position, onPath);
         }
     }
 }

@@ -31,6 +31,11 @@ public class PathWay
         get { return outside; }
     }
 
+    public Vector3[] Points
+    {
+        get{return points;}
+    }
+
     public PathWay(Vector3[] _path, float _radius, bool _cyclic)
     {
         radius = _radius;
