@@ -12,6 +12,5 @@ public class GenerateObject: MonoBehaviour
         {
             Instantiate(wanderPrefab, transform.position, Quaternion.identity);
         }
-        Destroy(this);
     }
 }

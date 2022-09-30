@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Go to random position in the world
+/// </summary>
 public class Wander_Steering : Steering
 {
     [SerializeField]

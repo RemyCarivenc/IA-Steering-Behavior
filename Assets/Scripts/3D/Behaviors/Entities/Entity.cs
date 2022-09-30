@@ -12,8 +12,13 @@ public class Entity : MonoBehaviour
     [SerializeField]
     private float radius;
 
+    #region Public properties
+
     public Collider Collider { get; private set; }
 
+    /// <summary>
+    /// Vehicle center on the transform
+    /// </summary>
     public Vector3 Center
     {
         get { return center; }
@@ -23,10 +28,6 @@ public class Entity : MonoBehaviour
     /// <summary>
     /// Entity radius
     /// </summary>
-    /// <remarks>
-    /// This property's setter recalculates a temporary value, so it's
-    /// advised you don't re-scale the entity's transform after it has been set
-    /// </remarks>
     public float Radius
     {
         get { return radius; }
@@ -37,12 +38,24 @@ public class Entity : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Vehicle's position
+    /// </summary>
+    /// <remarks>
+    /// The vehicle's position is the transform's position displaced 
+    /// by the vehicle center
+    /// </remarks>
     public Vector3 Position
     {
         get { return transform.position + center; }
     }
 
+    /// <summary>
+    /// Calculated squared object radius
+    /// </summary>
     public float SquaredRadius { get; private set; }
+
+    #endregion
 
     #region Methods
 
@@ -68,11 +81,6 @@ public class Entity : MonoBehaviour
         }
     }
 
-    public void ScaleRadiusWithTransform(float _baseRadius)
-    {
-        var scale = transform.lossyScale;
-        radius = _baseRadius * Mathf.Max(scale.x, Mathf.Max(scale.y, scale.z));
-    }
     #endregion
 
     protected virtual void OnDrawGizmos()
@@ -81,7 +89,6 @@ public class Entity : MonoBehaviour
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(Position, radius);
-
         }
     }
 }

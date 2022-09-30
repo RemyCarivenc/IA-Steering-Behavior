@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Evasion of another ObjectAI
+/// </summary>
 public class Evasion_Steering : Steering
 {
     [SerializeField]

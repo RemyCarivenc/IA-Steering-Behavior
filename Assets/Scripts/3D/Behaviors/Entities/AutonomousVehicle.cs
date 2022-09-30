@@ -1,35 +1,35 @@
 ﻿using System;
 using UnityEngine;
 
+/// <summary>
+/// ObjectAI subclass which automatically applies the steering forces from
+/// the components attached to the object.  AutonomousVehicle is characterized
+/// for the vehicle always moving in the same direction as its forward vector
+/// </summary>
 public class AutonomousVehicle : TickedObjectAI
 {
-    #region Internal state values
-
+    /// <summary>
+    /// Current vehicle speed
+    /// </summary>
     private float speed;
 
-    #endregion
     [Header("AutonomousVehicle")]
     /// <summary>
     /// Acceleration rate - it'll be used as a multiplier for the speed
-    /// at which the velocity is interpolated when accelerating. A rate
-    /// of 1 means that we interpolate across 1 second; a rate of 5 means
-    /// we do it five times as fast 
+    /// at which the velocity is interpolated when accelerating
     /// </summary>
     [SerializeField]
     private float accelerationRate = 5;
 
     /// <summary>
     /// Deceleration rate - it'll be used as a multiplier for the speed
-    /// at which the velocity is interpolated when decelerating. A rate
-    /// of 1 means that we interpolate across 1 second; a rate of 5 means
-    /// we do it five times as fast.
+    /// at which the velocity is interpolated when decelerating
     /// </summary>
     [SerializeField]
     private float decelerationRate = 8;
 
-    /// <summary>
-    /// Current vehicle speed
-    /// </summary>
+    #region Public properties
+
     public override float Speed
     {
         get { return speed; }
@@ -44,13 +44,17 @@ public class AutonomousVehicle : TickedObjectAI
         protected set { throw new NotSupportedException("Cannot set the velocity directly on AutonomousVehicle"); }
     }
 
-    #region Speed-related methods
+    #endregion
+
+    #region Methods
 
     /// <summary>
     /// Uses a desired velocity vector to adjust the vehicle's target speed and 
     /// orientation velocity.
     /// </summary>
-    /// <param name="velocity">Newly calculated velocity</param>
+    /// <param name="velocity">
+    /// Newly calculated velocity
+    /// </param>
     protected override void SetCalculatedVelocity(Vector3 _velocity)
     {
         TargetSpeed = _velocity.magnitude;
@@ -61,14 +65,11 @@ public class AutonomousVehicle : TickedObjectAI
     /// Calculates how much the agent's position should change in a manner that
     /// is specific to the vehicle's implementation.
     /// </summary>
-    /// <param name="deltaTime">Time delta to use in position calculations</param>
+    /// <param name="deltaTime">
+    /// Time delta to use in position calculations
+    /// </param>
     protected override Vector3 CalculatePositionDelta(float _deltaTime)
     {
-        /*
-     * Notice that we clamp the target speed and not the speed itself, 
-     * because the vehicle's maximum speed might just have been lowered
-     * and we don't want its actual speed to suddenly drop.
-     */
         var targetSpeed = Mathf.Clamp(TargetSpeed, 0, MaxSpeed);
         if (Mathf.Approximately(speed, targetSpeed))
         {

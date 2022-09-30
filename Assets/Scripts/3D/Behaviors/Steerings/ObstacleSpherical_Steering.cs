@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// Avoid spherical obstacle
+/// </summary>
 public class ObstacleSpherical_Steering : Steering
 {
     public bool drawGizmos = false;
@@ -38,7 +41,7 @@ public class ObstacleSpherical_Steering : Steering
             return avoidance;
 
         // first priority is to prevent immediate interpenetration
-        Vector3 separation = ObjectAI.SteerToAvoidCloseNeighbors(0, ObjectAI);
+        Vector3 separation = ObjectAI.SteerToAvoidCloseNeighbors(0);
         if (separation != Vector3.zero)
             return separation;
 
@@ -67,33 +70,6 @@ public class ObstacleSpherical_Steering : Steering
         }
 
         return avoidance;
-        /* Vector3 avoidance = Vector3.zero;
-
-         if (ObjectAI.Radar.Obstacles == null || !ObjectAI.Radar.Obstacles.Any())
-             return avoidance;
-
-         Vector3 futurePosition = ObjectAI.PredictFutureDesiredPosition(estimationTime);
-
-         foreach (var sphere in ObjectAI.Radar.Obstacles)
-         {
-             if (sphere == null || sphere.Equals(null))
-                 continue; // In case the object was destroyed since we cached it
-             PathIntersection next = FindNextIntersectionWithSphere(sphere);
-             float avoidanceMultiplier = 0f;
-             if (next.Intersect)
-             {
-                float timeToObstacle = next.Distance / ObjectAI.Speed;
-                avoidanceMultiplier = 2 * (estimationTime / timeToObstacle);
-             }
-             Vector3 oppositeDirection = ObjectAI.Position - sphere.Position;
-             avoidance += avoidanceMultiplier * oppositeDirection;
-         }
-
-         avoidance /= ObjectAI.Radar.Obstacles.Count;
-
-         Vector3 desiredVelocity = Vector3.Reflect(ObjectAI.DesiredVelocity, avoidance);
-
-         return desiredVelocity;*/
     }
 
     private float Square(float _f)
@@ -103,6 +79,10 @@ public class ObstacleSpherical_Steering : Steering
 
     private PathIntersection FindNextIntersectionWithSphere(Entity _obstacle)
     {
+        // This routine is based on the Paul Bourke's derivation in:
+        // Intersection of a Line and a Sphere (or circle)
+        // http://paulbourke.net/geometry/circlesphere/
+
         PathIntersection intersection = new PathIntersection(_obstacle);
 
         Vector3 futurePosition = ObjectAI.PredictFutureDesiredPosition(predictionTime);

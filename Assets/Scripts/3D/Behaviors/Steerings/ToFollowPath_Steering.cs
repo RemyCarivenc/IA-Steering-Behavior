@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// FollowPath behavior
+/// </summary>
 public class ToFollowPath_Steering : Steering
 {
     [SerializeField]
@@ -12,6 +15,8 @@ public class ToFollowPath_Steering : Steering
     private Transform pathRoot;
     [SerializeField]
     private bool isCyclic;
+    [SerializeField]
+    private float arrivalRadius = 0.5f;
 
     /// <summary>
     /// Minimum vehicle speed to consider when estimating future position.
@@ -53,19 +58,28 @@ public class ToFollowPath_Steering : Steering
 
         if(seek == Vector3.zero && targetPathDistance <= pathWay.TotalPathLength)
         {
-            target = pathWay.MapPathDistanceToPoint(targetPathDistance + 2f * ObjectAI.ArrivalRadius);
+            target = pathWay.MapPathDistanceToPoint(targetPathDistance + 2f * arrivalRadius);
             seek = GetSeekVector(target);
         }
         return seek;
     }
 
+    /// <summary>
+    /// Returns a vector to seek a target position
+    /// </summary>
+    /// <param name="_target">
+    /// Target position
+    /// </param>
+    /// <returns>
+    /// Seek vector
+    /// </returns>
     private Vector3 GetSeekVector(Vector3 _target)
     {
         var force = Vector3.zero;
 
         var difference = _target - ObjectAI.Position;
         var d = difference.sqrMagnitude;
-        if (d > ObjectAI.SquaredArrivalRadius)
+        if (d > (arrivalRadius*arrivalRadius))
         {
             force = difference;
         }

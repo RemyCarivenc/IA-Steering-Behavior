@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Pursuit of another ObjectAI
+/// </summary>
 public class Pursuit_Steering : Steering
 {
     [SerializeField]

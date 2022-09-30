@@ -7,16 +7,18 @@ using TickedPriorityQueue;
 /// </summary>
 public abstract class TickedObjectAI : ObjectAI
 {
-    #region Internal state values
-
+    /// <summary>
+    /// Priority queue for this objectAI's updates
+    /// </summary>
     private UnityTickedQueue steeringQueue;
 
+    [Header("TickedObjectAI")]
     /// <summary>
     /// The name of the steering queue for this ticked objectAI
     /// </summary>
+    [SerializeField]
     private string queueName = "Steering";
 
-    [Header("TickedObjectAI")]
     /// <summary>
     /// How often will this ObjectAI's steering calculations be ticked
     /// </summary>
@@ -35,14 +37,7 @@ public abstract class TickedObjectAI : ObjectAI
     [SerializeField]
     private int maxQueueProcessedPerUpdate = 20;
 
-    /// <summary>
-    /// Use for Gizmos
-    /// </summary>
-    /*[SerializeField]
-    private bool traceAdjustments = false;*/
-
-    #endregion
-
+    #region Public properties
     /// <summary>
     /// Last time the objectAI's tick was completed
     /// </summary>
@@ -78,14 +73,12 @@ public abstract class TickedObjectAI : ObjectAI
         set { queueName = value; }
     }
 
-    /// <summary>
-    /// Priority queue for this objectAI's updates
-    /// </summary>
-    /// <value></value>
     public UnityTickedQueue SteeringQueue
     {
         get { return steeringQueue; }
     }
+
+    #endregion
 
     /// <summary>
     /// Ticked object for the objectAI, so that its owner can configure
@@ -93,8 +86,6 @@ public abstract class TickedObjectAI : ObjectAI
     /// </summary>
     /// <value></value>
     public TickedObject TickedObject { get; private set; }
-
-    #region Unity events
 
     private void Start()
     {
@@ -114,10 +105,10 @@ public abstract class TickedObjectAI : ObjectAI
     protected override void OnDisable()
     {
         DeQueue();
+        base.OnDisable();
     }
-    #endregion
 
-    #region Velocity / Speed methods
+    #region Private Methods
 
     private void DeQueue()
     {
@@ -135,22 +126,22 @@ public abstract class TickedObjectAI : ObjectAI
         else
         {
             /*
-            * This is an interesting edge case.
-            * 
-            * Because of the way TickedQueue iterates through its items, we may have
-            * a case where:
-            * - The objectAI's OnUpdateSteering is enqueued into the work queue
-            * - An event previous to it being called causes it to be disabled, and de-queued
-            * - When the ticked queue gets to it, it executes and re-enqueues it
-            * 
-            * Therefore we double check that we're not trying to tick it while disabled, and 
-            * if so we de-queue it.  Must review TickedQueue to see if there's a way we can 
-            * easily handle these sort of issues without a performance hit.
+                This is an interesting edge case.
+
+                Because of the way TickedQueue iterates through its items, we may have
+                a case where:
+                - The objectAI's OnUpdateSteering is enqueued into the work queue
+                - An event previous to it being called causes it to be disabled, and de-queued
+                - When the ticked queue gets to it, it executes and re-enqueues it
+
+                Therefore we double check that we're not trying to tick it while disabled, and 
+                if so we de-queue it.  Must review TickedQueue to see if there's a way we can 
+                easily handle these sort of issues without a performance hit.
             */
             DeQueue();
         }
     }
-    Vector3 force;
+
     protected void CalculateForces()
     {
         PreviousTickTime = CurrentTickTime;
@@ -161,7 +152,7 @@ public abstract class TickedObjectAI : ObjectAI
             return;
         }
 
-        force = Vector3.zero;
+        Vector3 force = Vector3.zero;
 
         for (var i = 0; i < Steerings.Length; i++)
         {
@@ -171,7 +162,6 @@ public abstract class TickedObjectAI : ObjectAI
                 force += s.WeighedForce;
             }
         }
-        //LastRawForce = force;
 
         // Enforce speed limit. Steering behaviors are expected to return a
         // final desired velocity, not a acceleration, so we apply them directly.
@@ -187,12 +177,7 @@ public abstract class TickedObjectAI : ObjectAI
             DesiredVelocity = newVelocity;
         }
 
-        // Adjusts the velocity by applying the post-processing behaviors.
-        //
-        // This currently is not also considering the maximum force, nor 
-        // blending the new velocity into an accumulator. We *could* do that,
-        // but things are working just fine for now, and it seems like
-        // overkill. 
+        // Adjusts the velocity by applying the post-processing behaviors. 
         Vector3 adjustedVelocity = Vector3.zero;
         for (var i = 0; i < SteeringPostprocessors.Length; i++)
         {
@@ -204,8 +189,6 @@ public abstract class TickedObjectAI : ObjectAI
         if (adjustedVelocity != Vector3.zero)
         {
             adjustedVelocity = Vector3.ClampMagnitude(adjustedVelocity / Mass, MaxSpeed);
-            //TraceDisplacement(adjustedVelocity, Color.cyan);
-            //TraceDisplacement(newVelocity, Color.white);
             newVelocity = adjustedVelocity;
         }
 
@@ -217,7 +200,7 @@ public abstract class TickedObjectAI : ObjectAI
     /// Applies a steering force to this objectAI
     /// </summary>
     /// <param name="elapsedTime">
-    /// How long has elapsed since the last update<see cref="System.Single"/>
+    /// How long has elapsed since the last update
     /// </param>
     private void ApplySteeringForce(float elapsedTime)
     {
@@ -236,17 +219,13 @@ public abstract class TickedObjectAI : ObjectAI
     }
 
     /// <summary>
-    /// Turns the objectAI towards his velocity vector. Previously called
-    /// LookTowardsVelocity.
+    /// Turns the objectAI towards his velocity vector
     /// </summary>
-    /// <param name="deltaTime">Time delta to use for turn calculations</param>
+    /// <param name="deltaTime">
+    /// Time delta to use for turn calculations
+    /// </param>
     protected void AdjustOrientation(float deltaTime)
     {
-        /* 
-     * Avoid adjusting if we aren't applying any velocity. We also
-     * disregard very small velocities, to avoid jittery movement on
-     * rounding errors.
-     */
         if (TargetSpeed > MinSpeedForTurning && Velocity != Vector3.zero)
         {
             var newForward = Vector3.Scale(OrientationVelocity, AllowedMovementAxes).normalized;
@@ -263,22 +242,23 @@ public abstract class TickedObjectAI : ObjectAI
     /// Records the velocity that was just calculated by CalculateForces in a
     /// manner that is specific to each subclass. 
     /// </summary>
-    /// <param name="velocity">Newly calculated velocity</param>
+    /// <param name="velocity">
+    /// Newly calculated velocity
+    /// </param>
     protected abstract void SetCalculatedVelocity(Vector3 velocity);
 
     /// <summary>
     /// Calculates how much the agent's position should change in a manner that
-    /// is specific to the objectAI's implementation.
+    /// is specific to the ObjectAI's implementation.
     /// </summary>
-    /// <param name="deltaTime">Time delta to use in position calculations</param>
+    /// <param name="deltaTime">
+    /// Time delta to use in position calculations
+    /// </param>
     protected abstract Vector3 CalculatePositionDelta(float deltaTime);
 
     /// <summary>
     /// Zeros this objectAI's velocity.
     /// </summary>
-    /// <remarks>
-    /// Implementation details are left up to the subclasses.
-    /// </remarks>
     protected abstract void ZeroVelocity();
 
     #endregion
@@ -292,21 +272,12 @@ public abstract class TickedObjectAI : ObjectAI
         }
     }
 
-    /*[Conditional("TRACE_ADJUSTMENTS")]
-    private void TraceDisplacement(Vector3 delta, Color color)
-    {   
-        if(traceAdjustments)
-            Debug.DrawLine(transform.position, transform.position + delta, color);
-    }*/
-
+    #region Public Methods
     public void Stop()
     {
         CanMove = false;
         ZeroVelocity();
     }
 
-   /* private void OnDrawGizmos() {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(transform.position,transform.position + force);
-    }*/
+    #endregion
 }

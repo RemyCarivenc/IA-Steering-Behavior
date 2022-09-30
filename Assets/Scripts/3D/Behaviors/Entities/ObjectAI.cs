@@ -2,27 +2,18 @@
 using UnityEngine;
 
 /// <summary>
-/// Base class for objectAI.false It does not move the objects, and instead
+/// Base class for objectAI. It does not move the objects, and instead
 /// provides a set of basic functionality for its subclasses.
 /// </summary>
 public abstract class ObjectAI : Entity
 {
-    #region Private fields
-
     [Header("ObjectAI")]
+
+    /// <summary>
+    /// Minimum speed necessary for ths vehicle to apply a turn
+    /// </summary>
     [SerializeField]
     private float minSpeedForTurning = 0.1f;
-
-    /*/// <summary>
-    /// The objectAI movement priority
-    /// </summary>
-    /// <remarks>
-    /// Used only by some behaviors to determine if a objectAI should
-    /// be given priority before another one.!-- You may disregard if you aren't
-    /// using any behavior like that.
-    /// </remarks>
-    [SerializeField]
-    private int movementPriority;*/
 
     /// <summary>
     /// Across how many seconds is the objectAI's forward orientation smoothed
@@ -45,27 +36,20 @@ public abstract class ObjectAI : Entity
     /// </summary>
     /// <remarks>
     /// A 0 on the X/Y/Z value means the objectAI is not allowed to move on that 
-    /// axis, a 1 indicates it can. We use Vector3Toggle to set it on the 
-    /// editor as a helper
+    /// axis, a 1 indicates it can
     /// </remarks>
     [SerializeField, Vector3Toggle]
     private Vector3 allowedMovementAxes = Vector3.one;
 
     /// <summary>
-    /// The objectAI's arrival radius
+    /// The vehicle's maximum speed
     /// </summary>
-    /// <remarks>
-    /// The difference between the radius and arrival raidus is that
-    /// the first is used to determine the area the objectAI covers, whereas the
-    /// second one is a value used to determine if a objectAI is close enough
-    /// to a desired target. Unlike the radius, it is not scaled with the objectAI
-    /// </remarks>
-    [SerializeField]
-    private float arrivalRadius = 0.25f;
-
     [SerializeField]
     private float maxSpeed = 1;
 
+    /// <summary>
+    /// Maximum force that can be applied to the vehicle.
+    /// </summary>
     [SerializeField]
     private float maxForce = 10;
 
@@ -74,8 +58,6 @@ public abstract class ObjectAI : Entity
     /// </summary>
     [SerializeField]
     private bool canMove = true;
-
-    #endregion
 
     #region Public properties
 
@@ -90,10 +72,6 @@ public abstract class ObjectAI : Entity
         set { canMove = value; }
     }
 
-    /// <summary>
-    /// The velocity desired by this objectAI, likely calculated by means
-    /// similar to what AutonomousVehicle
-    /// </summary>
     public Vector3 DesiredVelocity { get; protected set; }
 
     public float Mass
@@ -102,11 +80,13 @@ public abstract class ObjectAI : Entity
         set { mass = Mathf.Max(0, value); }
     }
 
+
     public float MaxForce
     {
         get { return maxForce; }
         set { maxForce = Mathf.Clamp(value, 0, float.MaxValue); }
     }
+
 
     public float MaxSpeed
     {
@@ -119,38 +99,16 @@ public abstract class ObjectAI : Entity
         get { return minSpeedForTurning; }
     }
 
-    /* public int MovementPriority
-     {
-         get { return movementPriority; }
-     }*/
-
+    /// <summary>
+    /// Radar assigned to this vehicle
+    /// </summary>
     public Radar Radar { get; private set; }
 
     public Rigidbody Rigidbody { get; private set; }
 
-    // public Speedometer Speedometer { get; protected set; }
-
-    public float ArrivalRadius
-    {
-        get { return arrivalRadius; }
-        set
-        {
-            arrivalRadius = Mathf.Clamp(value, 0.01f, float.MaxValue);
-            SquaredArrivalRadius = arrivalRadius * arrivalRadius;
-        }
-    }
-
     /// <summary>
-    /// Squared arrival radius, for performance purposes
+    /// Current vehicle speed
     /// </summary>
-    public float SquaredArrivalRadius { get; private set; }
-
-    /// <summary>
-    /// Last raw force applied to the objectAI. It is expected to be set 
-    /// by the subclases.
-    /// </summary>
-    //public Vector3 LastRawForce { get; protected set; }
-
     public abstract float Speed { get; }
 
     public float TurnTime
@@ -159,21 +117,24 @@ public abstract class ObjectAI : Entity
         set { turnTime = Mathf.Max(0, value); }
     }
 
+    /// <summary>
+    /// Array of steering behaviors
+    /// </summary>
     public Steering[] Steerings { get; private set; }
+
+    /// <summary>
+    /// Array of steering post-processor behaviors
+    /// </summary>
     public Steering[] SteeringPostprocessors { get; private set; }
 
+    /// <summary>
+    /// Current vehicle velocity.
+    /// </summary>
     public abstract Vector3 Velocity { get; protected set; }
 
     /// <summary>
-    /// Current magnitude for the objectAI's velocity.
+    /// Current magnitude for the ObjectAI's velocity.
     /// </summary>
-    /// <remarks>
-    /// It is expected to be set at the same time that the Velocity is 
-    /// assigned in one of the descendent classes.  It may or may not
-    /// match the objectAI speed, depending on how that is calculated - 
-    /// for example, some subclasses can use a Speedometer to calculate
-    /// their speed.
-    /// </remarks>
     public float TargetSpeed { get; protected set; }
 
     /// <summary>
@@ -192,8 +153,6 @@ public abstract class ObjectAI : Entity
 
     #endregion
 
-    #region Unity methods
-
     protected override void Awake()
     {
         base.Awake();
@@ -202,15 +161,8 @@ public abstract class ObjectAI : Entity
         Steerings = allSteering.Where(x => !x.IsPostProcess).ToArray();
         SteeringPostprocessors = allSteering.Where(x => x.IsPostProcess).ToArray();
 
-        /* if(movementPriority == 0)
-             movementPriority = gameObject.GetInstanceID();*/
-
         Radar = GetComponent<Radar>();
-        // Speedometer = GetComponent<Speedometer>();
-        SquaredArrivalRadius = ArrivalRadius * ArrivalRadius;
     }
-
-    #endregion
 
     #region Methods
     /// <summary>
@@ -240,19 +192,28 @@ public abstract class ObjectAI : Entity
     {
         return Position + (DesiredVelocity * _predictionTime);
     }
-
-    public Vector3 SteerToAvoidCloseNeighbors(float _mindSeparationDistance, ObjectAI _object)
+    
+    /// <summary>
+    /// Avoidance of close neighbors
+    /// </summary>
+    /// <param name="_mindSeparationDistance">
+    /// Minimum separation distance
+    /// </param>
+    /// <returns>
+    /// Return the perpendicular if distance less than "_mindSeparationDistance"
+    /// </returns>
+    public Vector3 SteerToAvoidCloseNeighbors(float _mindSeparationDistance)
     {
-        foreach (var other in _object.Radar.Obstacles)
+        foreach (var other in Radar.Obstacles)
         {
-            float sumOfRadius = _object.Radius + other.Radius;
+            float sumOfRadius = Radius + other.Radius;
             float minCenterToCenter = _mindSeparationDistance + sumOfRadius;
-            Vector3 offset = other.Position - _object.Position;
+            Vector3 offset = other.Position - Position;
             float currenDistance = offset.magnitude;
             if (currenDistance < minCenterToCenter)
             {
-                float projection = Vector3.Dot(offset, _object.transform.forward);
-                Vector3 perpendicular = _object.transform.forward * projection;
+                float projection = Vector3.Dot(offset, transform.forward);
+                Vector3 perpendicular = transform.forward * projection;
                 perpendicular = -offset - perpendicular;
 
                 return perpendicular;
@@ -262,6 +223,15 @@ public abstract class ObjectAI : Entity
         return Vector3.zero;
     }
 
+    /// <summary>
+    /// Determine the time until nearest approach
+    /// </summary>
+    /// <param name="_other">
+    /// ObjectAI detect by radar
+    /// </param>
+    /// <returns>
+    /// The nearest approach time
+    /// </returns>
     public float PredictNearestApproachTime(ObjectAI _other)
     {
         Vector3 tempVelocity = _other.Velocity - Velocity;
@@ -280,29 +250,45 @@ public abstract class ObjectAI : Entity
         return projection / tempSpeed;
     }
 
+    /// <summary>
+    /// Calculates if a vehicle is in the neighborhood of another
+    /// </summary>
+    /// <param name="_other">
+    /// ObjectAI detect by radar
+    /// </param>
+    /// <param name="_minDistance">
+    /// Minimum distance
+    /// </param>
+    /// <param name="_maxDistance">
+    /// Maximum distance
+    /// </param>
+    /// <param name="_cosMaxAngle">
+    /// Cosine of the maximum angle between vehicles
+    /// </param>
+    /// <returns>
+    /// True if the other ObjectAI is considered to our neighbor
+    /// False if otherwise
+    /// </returns>
     public bool IsInNeighborhood(ObjectAI _other, float _minDistance, float _maxDistance, float _cosMaxAngle)
     {
         Vector3 offset = _other.Position - Position;
         float distanceSquared = offset.sqrMagnitude;
 
-        // definitely in neighborhood if inside minDistance sphere
         if (distanceSquared < (_minDistance * _minDistance))
         {
             return true;
         }
         else
         {
-            // definitely not in neighborhood if outside maxDistance sphere
             if (distanceSquared > (_maxDistance * _maxDistance))
             {
                 return false;
             }
             else
             {
-                // otherwise, test angular offset from forward axis
                 Vector3 unitOffset = offset / Mathf.Sqrt(distanceSquared);
                 float forwardness = Vector3.Dot(transform.forward, unitOffset);
-                if(forwardness > _cosMaxAngle)
+                if (forwardness > _cosMaxAngle)
                     return true;
                 else
                     return false;
@@ -325,30 +311,6 @@ public abstract class ObjectAI : Entity
         float speedError = _targetSpeed - Speed;
         return transform.forward * Mathf.Clamp(speedError, -MaxForce, +MaxForce);
     }
-
-    /// <summary>
-    /// Returns the distance from this objectAI to another
-    /// </summary>
-    /// <param name="_other">
-    /// ObjectAI to compare against
-    /// </param>
-    /// <returns>
-    /// The distance between both objectAI' positions. If negative, they are overlapping
-    /// </returns>
-    public float DistanceFromPerimeter(ObjectAI _other)
-    {
-        Vector3 diff = Position - _other.Position;
-        return diff.magnitude - Radius - _other.Radius;
-    }
-
-    /// <summary>
-    /// Reset the objectAI's orientation
-    /// </summary>
-    public void ResetOrientation()
-    {
-        transform.up = Vector3.up;
-        transform.forward = Vector3.forward;
-    }
     #endregion
 
     protected override void OnDrawGizmos()
@@ -357,7 +319,7 @@ public abstract class ObjectAI : Entity
         if (drawGizmos)
         {
             base.OnDrawGizmos();
-            //DesiredVelocity
+
             Debug.DrawLine(Position, DesiredVelocity + Position, Color.green);
         }
     }

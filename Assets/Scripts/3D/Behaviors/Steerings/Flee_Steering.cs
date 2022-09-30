@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Flee target
+/// </summary>
 public class Flee_Steering : Steering
 {
     [SerializeField]

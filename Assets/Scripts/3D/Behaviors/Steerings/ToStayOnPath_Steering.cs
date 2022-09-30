@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// PathFollowing Behavior, force ObjectAI to stay on Path 
+/// </summary>
 public class ToStayOnPath_Steering : Steering
 {
     [SerializeField]

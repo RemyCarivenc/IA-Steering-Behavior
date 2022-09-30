@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
+/// <summary>
+/// Cohesion behavior to move toward center of neighbords
+/// </summary>
 [RequireComponent(typeof(Radar))]
 public class Cohesion_Steering : Steering
 {

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// Alignment behavior, steer to head in same direction as neighbords
+/// </summary>
 public class Alignment_Steering : Steering
 {
     [SerializeField]

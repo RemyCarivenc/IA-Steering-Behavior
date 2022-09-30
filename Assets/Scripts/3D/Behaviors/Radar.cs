@@ -4,15 +4,12 @@ using UnityEngine;
 using TickedPriorityQueue;
 using System;
 
+/// <summary>
+/// Base class for Radar
+/// </summary>
 public class Radar : MonoBehaviour
 {
-    #region Private static properties
-
     private static IDictionary<int, Entity> knownDetectableObjects = new SortedDictionary<int, Entity>();
-
-    #endregion
-
-    #region Private properties
 
     [SerializeField]
     private bool drawGizmos;
@@ -20,58 +17,78 @@ public class Radar : MonoBehaviour
     private TickedObject tickedObject;
     private UnityTickedQueue steeringQueue;
 
+    [SerializeField]
     private string queueName = "Radar";
 
     /// <summary>
     /// The maximum number of radar update calls processed on the queue per update
     /// </summary>
-    /// <remarks>
-    /// Notice that this is a limit shared across queue items of the same name, at
-    /// least until we have some queue settings, so whatever value is set last for 
-    /// the queue will win.  Make sure your settings are consistent for objects of
-    /// the same queue.
-    /// </remarks>
     [SerializeField]
     private int maxQueueProcessedPerUpdate = 20;
+
+    /// <summary>
+    /// How often is the radar updated
+    /// </summary>
     [SerializeField]
     private float tickLength = 0.5f;
+
+    /// <summary>
+    /// Radar ping detection radius
+    /// </summary>
     [SerializeField]
     private float detectionRadius = 5;
+
+    /// <summary>
+    /// Indicates if the radar will detect disabled vehicles. 
+    /// </summary>
     [SerializeField]
     private bool detectDisabledObjectAI;
+
+    /// <summary>
+    /// Layer mask for the object layers checked
+    /// </summary>
     [SerializeField]
     private LayerMask layersChecked;
+
     [SerializeField]
     private int preAllocateSize = 30;
 
+    /// <summary>
+    /// List of currently detected neighbors
+    /// </summary>
     private Collider[] detectedColliders;
+
     private List<Entity> detectedObjects;
+
+    /// <summary>
+    /// List of ObjectAI detected among the colliders
+    /// </summary>
     private List<ObjectAI> objectAIs;
-    private List<Entity> obstacles;
-
-    #endregion
-
-    #region Public properties
 
     /// <summary>
     /// List of obstacles detected by the radar
     /// </summary>
+    private List<Entity> obstacles;
+
+    #region Public properties
+
     public List<Entity> Obstacles
     {
         get { return obstacles; }
     }
 
     /// <summary>
-    /// Gets the objectAI this radar is attached to
+    /// Gets the ObjectAI this radar is attached to
     /// </summary>
     public ObjectAI ObjectAI { get; private set; }
 
+    /// <summary>
+    /// Returns the radars position
+    /// </summary>
     public Vector3 Position
     {
         get { return (ObjectAI != null) ? ObjectAI.Position : transform.position; }
     }
-
-    public Action<Radar> OnDetected = delegate { };
 
     public List<ObjectAI> ObjectAIs
     {
@@ -85,7 +102,9 @@ public class Radar : MonoBehaviour
     /// <summary>
     /// Must be called when a Entity is enabled so they can be easily identified
     /// </summary>
-    /// <param name="obj">Entity</param>
+    /// <param name="obj">
+    /// Entity
+    /// </param>
     public static void AddDetectableObject(Entity _obj)
     {
         knownDetectableObjects[_obj.Collider.GetInstanceID()] = _obj;
@@ -94,8 +113,12 @@ public class Radar : MonoBehaviour
     /// <summary>
     /// Must be called when a Entity is disabled to remove it from the list of known objects
     /// </summary>
-    /// <param name="obj">Entity</param>
-    /// <returns>True if the call to Remove succeeded</returns>
+    /// <param name="obj">
+    /// Entity
+    /// </param>
+    /// <returns>
+    /// True if the call to Remove succeeded
+    /// </returns>
     public static bool RemoveDetectableObject(Entity _obj)
     {
         return knownDetectableObjects.Remove(_obj.Collider.GetInstanceID());
@@ -103,7 +126,7 @@ public class Radar : MonoBehaviour
 
     #endregion
 
-    #region Methods
+
 
     private void Awake()
     {
@@ -131,15 +154,13 @@ public class Radar : MonoBehaviour
             steeringQueue.Remove(tickedObject);
         }
     }
+    
+    #region Methods
 
     private void OnUpdateRadar(object obj)
     {
         detectedColliders = Detect();
         FilterDetected();
-        if (OnDetected != null)
-        {
-            OnDetected(this);
-        }
     }
 
     private Collider[] Detect()

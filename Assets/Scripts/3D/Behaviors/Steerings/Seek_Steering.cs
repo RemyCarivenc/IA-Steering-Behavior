@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Seek behavior
+/// </summary>
 public class Seek_Steering : Steering
 {
     [SerializeField]

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// Unaligned collision avoidance behavior
+/// </summary>
 public class EntitiesAvoidance_Steering : Steering
 {
     public bool drawGizmos = false;
@@ -22,7 +25,7 @@ public class EntitiesAvoidance_Steering : Steering
             return avoidance;
 
         // first priority is to prevent immediate interpenetration
-        Vector3 separation = ObjectAI.SteerToAvoidCloseNeighbors(0, ObjectAI);
+        Vector3 separation = ObjectAI.SteerToAvoidCloseNeighbors(0);
         if (separation != Vector3.zero)
             return separation;
 

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// Separation behavior, steer away from neighbords
+/// </summary>
 public class Separation_Steering : Steering
 {
 
